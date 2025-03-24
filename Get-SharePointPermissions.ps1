@@ -12,6 +12,18 @@ class SharePointPermission {
     }
 }
 
+function Write-Log {
+    param (
+        [string]$Message,
+        [string]$LogFilePath = ".\logs\$(Get-Date -Format 'yyyyMMdd').log",
+        [int]$LineNumber = $(Get-PSCallStack)[1].Position.StartLine
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logMessage = "$timestamp - Line $LineNumber: $Message"
+    Add-Content -Path $LogFilePath -Value $logMessage
+}
+
 function Get-SharePointPermissions {
     param (
         [Parameter(Mandatory = $true)]
@@ -28,6 +40,7 @@ function Get-SharePointPermissions {
 
     foreach ($admin in $siteAdmins) {
         [SharePointPermission]::new($SiteCollectionUrl, "Site Collection Administrator", $admin.LoginName, "Full Control")
+        Write-Log -Message "Found Site Collection Administrator: $($admin.LoginName)"
     }
 
     # Get all webs with unique permissions
@@ -36,6 +49,7 @@ function Get-SharePointPermissions {
 
     foreach ($web in $webs) {
         [SharePointPermission]::new($web.Url, "Web with Unique Permissions", "", "")
+        Write-Log -Message "Found Web with Unique Permissions: $($web.Url)"
     }
 
     # Get lists with unique permissions
@@ -44,6 +58,7 @@ function Get-SharePointPermissions {
 
     foreach ($list in $lists) {
         [SharePointPermission]::new($list.DefaultViewUrl, "List with Unique Permissions", "", "")
+        Write-Log -Message "Found List with Unique Permissions: $($list.DefaultViewUrl)"
     }
 
     # Get list items with unique permissions
@@ -53,6 +68,7 @@ function Get-SharePointPermissions {
 
         foreach ($item in $items) {
             [SharePointPermission]::new($item.FileRef, "List Item with Unique Permissions", "", "")
+            Write-Log -Message "Found List Item with Unique Permissions: $($item.FileRef)"
         }
     }
 }
